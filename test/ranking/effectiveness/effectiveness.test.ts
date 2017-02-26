@@ -217,12 +217,12 @@ export const SET_3D: RuleSet<SpecQueryModel> = {
           {channel: Y, field: 'N', type: Type.NOMINAL}
         ]
       },
-      [COLOR, SIZE].map((_) => {
+      [COLOR, SIZE].map((channel) => {
         return {
           mark: POINT,
           encodings: [
             {channel: X, field: 'Q', type: Type.QUANTITATIVE},
-            {channel: COLOR, field: 'Q1', type: Type.QUANTITATIVE},
+            {channel: channel, field: 'Q1', type: Type.QUANTITATIVE},
             {channel: Y, field: 'N', type: Type.NOMINAL}
           ]
         };

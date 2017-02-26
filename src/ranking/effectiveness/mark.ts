@@ -12,6 +12,7 @@ import {BIN_Q, TIMEUNIT_T, TIMEUNIT_O, Q, N, O, T, NONE, ExtendedType, getExtend
 
 export namespace MarkScore {
   export const MARK_SCORE = 'markScore';
+  export const TERRIBLE = -10;
 
   export function featurize(xType: ExtendedType, yType: ExtendedType, hasOcclusion: boolean, mark: Mark) {
     return xType + '_' + yType + '_' + hasOcclusion + '_' + mark;
@@ -31,11 +32,11 @@ export namespace MarkScore {
           point: 0,
           text: -0.2,
           tick: -0.5,
-          rect: -1,
           bar: -2,
           line: -2,
           area: -2,
-          rule: -2.5
+          rule: -2.5,
+          rect: -2*TERRIBLE,
         };
         forEach(occludedQQMark, (score, mark: Mark) => {
           const feature = featurize(xType, yType, true, mark);
@@ -51,7 +52,8 @@ export namespace MarkScore {
           bar: -2,
           line: -2,
           area: -2,
-          rule: -2.5
+          rule: -2.5,
+          rect: -2*TERRIBLE
         };
         forEach(noOccludedQQMark, (score, mark: Mark) => {
           const feature = featurize(xType, yType, false, mark);
