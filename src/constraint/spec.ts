@@ -650,8 +650,9 @@ export const SPEC_CONSTRAINTS: SpecConstraintModel[] = [
     allowWildcardForProperties: false,
     strict: true,
     satisfy: (specM: SpecQueryModel, _: Schema, __: QueryConfig) => {
-      const stack = specM.stack();
-      if (stack) {
+      // FIXME correctly refer to the stack property.
+      const stacked = ((specM.specQuery.config || {}).mark || {}).stacked;
+      if (stacked && stacked !== 'none') {
         for (let encQ of specM.getEncodings()) {
           if ((!!encQ.aggregate || encQ.autoCount === true) &&
              encQ.type === Type.QUANTITATIVE &&
@@ -672,8 +673,13 @@ export const SPEC_CONSTRAINTS: SpecConstraintModel[] = [
     allowWildcardForProperties: false,
     strict: false,
     satisfy: (specM: SpecQueryModel, _: Schema, __: QueryConfig) => {
-      const stack = specM.stack();
-      if (stack) {
+      // FIXME correctly refer to the stack property.
+      const stacked = ((specM.specQuery.config || {}).mark || {}).stacked;
+      if (stacked && stacked !== 'none') {
+        const stack = specM.stack();
+        if (stack === null) {
+          return false;
+        }
         const measureEncQ = specM.getEncodingQueryByChannel(stack.fieldChannel);
         return contains(SUM_OPS, measureEncQ.aggregate) || !!measureEncQ.autoCount;
       }

@@ -852,7 +852,12 @@ describe('constraints/spec', () => {
             {channel: Channel.X, field: 'A', type: Type.QUANTITATIVE, scale: {type: scaleType}, aggregate: AggregateOp.SUM},
             {channel: Channel.Y, field: 'B', type: Type.NOMINAL},
             {channel: Channel.COLOR, field: 'C', type: Type.NOMINAL}
-          ]
+          ],
+          config: {
+            mark: {
+              stacked: 'zero'
+            }
+          }
         });
         assert.isFalse(
           SPEC_CONSTRAINT_INDEX['omitNonLinearScaleTypeWithStack'].satisfy(specM, schema, DEFAULT_QUERY_CONFIG),
@@ -868,7 +873,12 @@ describe('constraints/spec', () => {
           {channel: Channel.X, field: 'A', type: Type.QUANTITATIVE, scale: {type: ScaleType.LINEAR}, aggregate: AggregateOp.SUM},
           {channel: Channel.Y, field: 'B', type: Type.NOMINAL},
           {channel: Channel.COLOR, field: 'C', type: Type.NOMINAL}
-        ]
+        ],
+        config: {
+          mark: {
+            stacked: 'zero'
+          }
+        }
       });
       assert.isTrue(SPEC_CONSTRAINT_INDEX['omitNonLinearScaleTypeWithStack'].satisfy(specM, schema, DEFAULT_QUERY_CONFIG));
     });
@@ -881,7 +891,12 @@ describe('constraints/spec', () => {
           {channel: Channel.Y, field: 'B', type: Type.NOMINAL},
           {channel: Channel.COLOR, field: 'C', type: Type.QUANTITATIVE, scale: {type: ScaleType.POW}},
           {channel: Channel.DETAIL, field: 'A', type: Type.NOMINAL}
-        ]
+        ],
+        config: {
+          mark: {
+            stacked: 'zero'
+          }
+        }
       });
       assert.isTrue(SPEC_CONSTRAINT_INDEX['omitNonLinearScaleTypeWithStack'].satisfy(specM, schema, DEFAULT_QUERY_CONFIG));
     });
@@ -911,7 +926,12 @@ describe('constraints/spec', () => {
               {channel: Channel.X, field: 'A', type: Type.QUANTITATIVE, aggregate: aggregate},
               {channel: Channel.Y, field: 'B', type: Type.NOMINAL},
               {channel: stackByChannel, field: 'C', type: Type.NOMINAL}
-            ]
+            ],
+            config: {
+              mark: {
+                stacked: 'zero'
+              }
+            }
           });
           assert.isTrue(SPEC_CONSTRAINT_INDEX['omitNonSumStack'].satisfy(specM, schema, DEFAULT_QUERY_CONFIG));
         });
@@ -927,7 +947,12 @@ describe('constraints/spec', () => {
               {channel: Channel.X, autoCount: true, type: Type.QUANTITATIVE},
               {channel: Channel.Y, field: 'B', type: Type.NOMINAL},
               {channel: stackByChannel, field: 'C', type: Type.NOMINAL}
-            ]
+            ],
+            config: {
+              mark: {
+                stacked: 'zero'
+              }
+            }
           });
           assert.isTrue(SPEC_CONSTRAINT_INDEX['omitNonSumStack'].satisfy(specM, schema, DEFAULT_QUERY_CONFIG));
         });
@@ -943,14 +968,19 @@ describe('constraints/spec', () => {
               {channel: Channel.X, field: 'A', type: Type.QUANTITATIVE, aggregate: aggregate},
               {channel: Channel.Y, field: 'B', type: Type.NOMINAL},
               {channel: stackByChannel, field: 'C', type: Type.NOMINAL}
-            ]
+            ],
+            config: {
+              mark: {
+                stacked: 'zero'
+              }
+            }
           });
           assert.isFalse(SPEC_CONSTRAINT_INDEX['omitNonSumStack'].satisfy(specM, schema, DEFAULT_QUERY_CONFIG));
         });
       });
     });
 
-    it('should return true for non-stack.', () => {
+    it('should return false for non-stack.', () => {
       [Channel.OPACITY, Channel.DETAIL, Channel.COLOR].forEach((stackByChannel) => {
         const specM = buildSpecQueryModel({
           mark: Mark.BAR,
@@ -958,9 +988,14 @@ describe('constraints/spec', () => {
             {channel: Channel.X, field: 'A', type: Type.QUANTITATIVE},
             {channel: Channel.Y, field: 'B', type: Type.NOMINAL},
             {channel: stackByChannel, field: 'C', type: Type.NOMINAL}
-          ]
+          ],
+          config: {
+            mark: {
+              stacked: 'zero'
+            }
+          }
         });
-        assert.isTrue(SPEC_CONSTRAINT_INDEX['omitNonSumStack'].satisfy(specM, schema, DEFAULT_QUERY_CONFIG));
+        assert.isFalse(SPEC_CONSTRAINT_INDEX['omitNonSumStack'].satisfy(specM, schema, DEFAULT_QUERY_CONFIG));
       });
     });
   });

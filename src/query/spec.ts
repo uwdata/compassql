@@ -1,13 +1,15 @@
 import {Channel, X, Y, STACK_GROUP_CHANNELS} from 'vega-lite/src/channel';
 import {Config} from 'vega-lite/src/config';
 import {Data} from 'vega-lite/src/data';
+import {Encoding} from 'vega-lite/src/encoding';
 import {ExtendedUnitSpec} from 'vega-lite/src/spec';
 import {Mark} from 'vega-lite/src/mark';
-import {StackOffset, StackProperties} from 'vega-lite/src/stack';
+import {Scale} from 'vega-lite/src/scale';
+import {StackOffset, StackProperties, stack as getStack} from 'vega-lite/src/stack';
 
 import {isWildcard, WildcardProperty} from '../wildcard';
 import {isEncodingTopLevelProperty, Property} from '../property';
-import {contains, extend, keys, some} from '../util';
+import {contains, extend, keys, some, isBoolean} from '../util';
 
 import {TransformQuery} from './transform';
 import {EncodingQuery} from './encoding';
@@ -66,59 +68,66 @@ export function isAggregate(specQ: SpecQuery) {
 }
 
 /**
- * @return the stack offset type for the specQuery
+ * @return the stack offset type for the specQuery or null if unsure / if the plot is not stacked
  */
-export function stack(specQ: SpecQuery): StackProperties & {fieldEncQ: EncodingQuery, groupByEncQ: EncodingQuery} {
-  const config = specQ.config;
-  const stacked = (config && config.mark) ? config.mark.stacked : undefined;
+export function stack(specQ: SpecQuery) {
 
-  // Should not have stack explicitly disabled
-  if (contains([StackOffset.NONE, null, false], stacked)) {
-    return null;
-  }
-
-  // Should have stackable mark
-  if (!contains(['bar', 'area'], specQ.mark)) {
-    return null;
-  }
-
-  // Should be aggregate plot
+   // Should be aggregate plot
   if (!isAggregate(specQ)) {
     return null;
   }
-
-  const stackBy = specQ.encodings.reduce((sc, encQ: EncodingQuery) => {
-    if (contains(STACK_GROUP_CHANNELS, encQ.channel) && !encQ.aggregate) {
-      sc.push({
-        channel: encQ.channel,
-        fieldDef: encQ
-      });
-    }
-    return sc;
-  }, []);
-
-  if (stackBy.length === 0) {
+  if (isWildcard(specQ.mark)) {
     return null;
   }
+  const config = specQ.config;
+  const stacked = (config && config.mark) ? config.mark.stacked : undefined;
 
-  // Has only one aggregate axis
-  const xEncQ = specQ.encodings.reduce((f, encQ: EncodingQuery) => {
-    return f || (encQ.channel === Channel.X ? encQ : null);
-  }, null);
-  const yEncQ = specQ.encodings.reduce((f, encQ: EncodingQuery) => {
-    return f || (encQ.channel === Channel.Y ? encQ : null);
-  }, null);
-  const xIsAggregate = !!xEncQ && (!!xEncQ.aggregate || !!xEncQ.autoCount);
-  const yIsAggregate = !!yEncQ && (!!yEncQ.aggregate || !!yEncQ.autoCount);
+  // assemble encoding
+  let encoding: Encoding = {};
+  let encQIndex = {};
 
-  if (xIsAggregate !== yIsAggregate) {
+  for (let encQ of specQ.encodings) {
+    // Skip if required properties are still wildcards
+    if (isWildcard(encQ.aggregate)) {
+      return null;
+    }
+    if (isWildcard(encQ.autoCount)) {
+      return null;
+    }
+    if (isWildcard(encQ.channel)) {
+      return null;
+    }
+    let scale: Scale = {};
+    if (encQ.channel === 'x' || encQ.channel === 'y') {
+      if (encQ.scale) {
+        if (isWildcard(encQ.scale)) {
+          return null;
+        }
+        if (!isBoolean(encQ.scale) && encQ.scale.type) {
+          if (isWildcard(encQ.scale.type)) {
+            return null;
+          }
+          scale.type = encQ.scale.type;
+        }
+      }
+    }
+
+    encoding[encQ.channel] = {
+      aggregate: encQ.aggregate || (encQ.autoCount ? 'aggregate' : undefined),
+      // These two actually doesn't matter
+      field: encQ.field as string,
+      type: encQ.type as any,
+      scale: scale
+    };
+    encQIndex[encQ.channel] = encQ;
+  }
+
+  const s = getStack(specQ.mark, encoding, stacked);
+  if (s) {
     return {
-      groupbyChannel: xIsAggregate ? (!!yEncQ ? Y : null) : (!!xEncQ ? X : null),
-      groupByEncQ: xIsAggregate ? yEncQ : xEncQ,
-      fieldChannel: xIsAggregate ? X : Y,
-      fieldEncQ: xIsAggregate ? xEncQ : yEncQ,
-      stackBy: stackBy,
-      offset: stacked || StackOffset.ZERO
+      ...s,
+      fieldEncQ: encQIndex[s.groupbyChannel],
+      groupByEncQ: encQIndex[s.groupbyChannel]
     };
   }
   return null;
