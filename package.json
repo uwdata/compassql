@@ -15,7 +15,7 @@
     "deploy": "npm run clean && npm run lint && npm run test && scripts/deploy.sh",
     "lint": "tslint -c tslint.json src/**/*.ts test/**/*.ts",
     "watch": "nodemon -x 'npm run build && npm run test:only && npm run lint'",
-    "schema": "npm run prebuild && typescript-json-schema --required true src/query.ts Query > build/compassql-schema.json",
+    "schema": "npm run prebuild && typescript-json-schema --required true --noExtraProps true src/query/query.ts Query > build/compassql-schema.json",
     "tsc": "tsc",
     "test": "tsc && npm run test:only",
     "posttest": "npm run lint",
@@ -60,13 +60,13 @@
     "tsify": "~3.0.0",
     "tslint": "~4.3.1",
     "typescript": "~2.1.5",
+    "typescript-json-schema": "^0.9.0",
     "uglify-js": "~2.6.1",
     "vega": "~2.6.0",
     "vega-datasets": "latest"
   },
   "dependencies": {
     "datalib": "~1.7.0",
-    "typescript-json-schema": "^0.9.0",
     "vega-lite": "2.0.0-alpha.1"
   },
   "browserify": {
